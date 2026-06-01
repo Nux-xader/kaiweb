@@ -36,7 +36,7 @@ func main() {
 				return
 			}
 			gvars.TeleID = &cleanTeleID
-			menu.BuyTicketV2()
+			menu.Buy()
 		} else if ec != "" {
 			fmt.Println(" [!] " + ec)
 		} else {
