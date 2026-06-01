@@ -189,6 +189,9 @@ func (e *EventHandler) selectPayment() {
 		return
 	}
 
+	time.Sleep(3 * time.Second)
+	e.Browser.Page.WaitLoad()
+	time.Sleep(3 * time.Second)
 	html, err := e.Browser.Page.HTML()
 	if err != nil {
 		utils.DangerPrint("Gagal mendapatkan html pembayaran: " + err.Error())
