@@ -1,0 +1,6 @@
+debug
+teleid.txt
+license.txt
+*.exe
+*.upx
+release/
