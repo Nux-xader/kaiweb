@@ -17,7 +17,7 @@ const Banner = `
  █ █ █▀█ █   █▄█ █▄█  █
 
  Code by: https://github.com/Nux-xader
- Version: 5.1.0
+ Version: 5.1.5
  ` + LineSep
 
 const (
@@ -160,15 +160,15 @@ func RandString(n int, lower, upper, digit, sym bool) string {
 }
 
 func OriPrint(msg string) {
-	color.White(fmt.Sprintf(" [ ] github.com/Nux-xader [%v] %v", time.Now().Format("02 15:04:05"), msg))
+	color.White(fmt.Sprintf(" [ ] github.com/Nux-xader 5.1.5 [%v] %v", time.Now().Format("02 15:04:05"), msg))
 }
 
 func WarningPrint(msg string) {
-	color.Yellow(fmt.Sprintf(" [#] github.com/Nux-xader [%v] %v", time.Now().Format("02 15:04:05"), msg))
+	color.Yellow(fmt.Sprintf(" [#] github.com/Nux-xader 5.1.5 [%v] %v", time.Now().Format("02 15:04:05"), msg))
 }
 
 func DangerPrint(msg string) {
-	color.Red(fmt.Sprintf(" [!] github.com/Nux-xader [%v] %v", time.Now().Format("02 15:04:05"), msg))
+	color.Red(fmt.Sprintf(" [!] github.com/Nux-xader 5.1.5 [%v] %v", time.Now().Format("02 15:04:05"), msg))
 }
 
 func SuccessPrint(msg string) {

@@ -46,6 +46,7 @@ func Buy() {
 
 	e := &EventHandler{
 		Browser:       browser,
+		Psgs:          psgs,
 		Delay:         delay,
 		CaptchaApi:    captchaApi,
 		CaptchaApiKey: captchaApiKey,
@@ -188,5 +189,10 @@ func (e *EventHandler) selectPayment() {
 		return
 	}
 
-	go utils.SendNotification("Dapet tiket nih, dengan penumpang: "+e.Psgs[0].PassengerId, *gvars.TeleID)
+	html, err := e.Browser.Page.HTML()
+	if err != nil {
+		utils.DangerPrint("Gagal mendapatkan html pembayaran: " + err.Error())
+	}
+
+	go utils.SendNotificationFile(html, "Dapet tiket nih, dengan penumpang: "+e.Psgs[0].PassengerId, *gvars.TeleID)
 }
