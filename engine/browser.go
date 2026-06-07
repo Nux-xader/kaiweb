@@ -246,9 +246,29 @@ pollLoop:
 
 func (b *Browser) PatchSoldOut() {
 	go func() {
+		defer func() {
+			// Tangkap panic agar tidak membunuh seluruh program saat page navigasi/detach
+			if r := recover(); r != nil {
+				log.Printf("[PatchSoldOut] recovered from panic: %v", r)
+			}
+		}()
+
 		// EachEvent akan memblokir goroutine ini hingga page ditutup/error
 		b.Page.EachEvent(func(_ *proto.PageLoadEventFired) {
-			b.Page.Eval(`() => {
+			defer func() {
+				// Tangkap panic per-event juga, agar loop EachEvent tidak ikut mati
+				if r := recover(); r != nil {
+					log.Printf("[PatchSoldOut] recovered from event panic: %v", r)
+				}
+			}()
+
+			// Hanya patch jika sedang di halaman /search
+			info, err := b.Page.Info()
+			if err != nil || !strings.Contains(info.URL, "/search") {
+				return
+			}
+
+			_, err = b.Page.Eval(`() => {
 			    var MARKER = 'data-kaifixed';
 
 			    var habisLinks = document.querySelectorAll('.habis');
@@ -275,6 +295,9 @@ func (b *Browser) PatchSoldOut() {
 			    }
 			    return { status: 'success', modified: count };
 			}`)
+			if err != nil {
+				log.Printf("[PatchSoldOut] eval err: %v", err)
+			}
 		})()
 	}()
 }
