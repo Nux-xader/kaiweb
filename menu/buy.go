@@ -105,7 +105,7 @@ func (e *EventHandler) submitBooking() {
 		return
 	}
 
-	adultI, _ := 0, 0
+	adultI, infantI := 0, 0
 	for _, psg := range e.Psgs {
 		switch psg.PassengerType {
 		case "A":
@@ -126,6 +126,25 @@ func (e *EventHandler) submitBooking() {
 			adultI++
 
 		case "I":
+			i := "[" + strconv.Itoa(infantI) + "]"
+			infantDOB := utils.NIKToDOB(psg.PassengerId)
+			_, err = e.Browser.Page.Eval(`() => {
+				document.querySelectorAll('input[name="infant_nama[]"]')` + i + `.value = '` + psg.PassengerName + `';
+				document.querySelectorAll('input[name="infant_tanggallahir[]"]')` + i + `.value = '` + infantDOB + `';
+				document.querySelectorAll('input[name="infant_notandapengenal[]"]')` + i + `.value = '` + psg.PassengerId + `';
+
+				const idTypeSelect = document.querySelectorAll('select[name="infant_tandapengenal[]"]')` + i + `;
+				if (idTypeSelect) {
+					idTypeSelect.value = '` + psg.PassengerIdType + `';
+					idTypeSelect.dispatchEvent(new Event('change'));
+				}
+			}`)
+			if err != nil {
+				utils.DangerPrint(fmt.Sprintf("Pengisian data bayi ke %d err: %s", infantI, err.Error()))
+				e.Browser.Page.Reload()
+				return
+			}
+			infantI++
 		}
 	}
 

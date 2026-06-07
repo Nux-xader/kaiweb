@@ -45,7 +45,6 @@ func inputPsgKaiWeb(psgType string) (psg models.KAIWebPassengerData) {
 
 	psg.PassengerId = utils.InputNIK()
 	return
-
 }
 
 func setupPsgKaiWeb() (psgs []models.KAIWebPassengerData) {

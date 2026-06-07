@@ -166,3 +166,38 @@ func NikRotator(nik string) string {
 	id, _ := strconv.Atoi(nik[len(nik)-2:])
 	return fmt.Sprintf("%s%02d", nik[:len(nik)-2], increment(id, 99))
 }
+
+// NIKToDOB mengekstrak tanggal lahir dari NIK Indonesia.
+// Digit 7-8 = hari (perempuan: hari + 40), digit 9-10 = bulan, digit 11-12 = tahun (2 digit).
+// Mengembalikan string dalam format "dd-Mon-yyyy" (misal: "13-Jan-2025").
+func NIKToDOB(nik string) string {
+	if len(nik) < 12 {
+		return ""
+	}
+
+	// Bulan dalam bahasa Indonesia (singkatan KAI / jQuery UI datepicker)
+	monthNames := [13]string{"", "Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"}
+
+	day, _ := strconv.Atoi(nik[6:8])
+	month, _ := strconv.Atoi(nik[8:10])
+	yearSuffix, _ := strconv.Atoi(nik[10:12])
+
+	// Perempuan: hari di-encode dengan +40
+	if day > 40 {
+		day -= 40
+	}
+
+	// Tentukan abad: infant (0-3 tahun) selalu lahir di 2000-an
+	currentYearSuffix := time.Now().Year() % 100
+	year := 2000 + yearSuffix
+	if yearSuffix > currentYearSuffix {
+		// Jika suffix tahun lebih besar dari tahun sekarang, berarti lahir di 1900-an
+		year = 1900 + yearSuffix
+	}
+
+	if month < 1 || month > 12 {
+		return ""
+	}
+
+	return fmt.Sprintf("%02d-%s-%d", day, monthNames[month], year)
+}
