@@ -20,6 +20,7 @@ type EventHandler struct {
 	CaptchaApi    string
 	CaptchaApiKey string
 	Tried         int
+	TicketUrl     string // URL /passengerdata tiket yang sedang diproses
 }
 
 func Buy() {
@@ -70,15 +71,30 @@ func Buy() {
 
 		switch {
 		case strings.Contains(currentUrl, "/passengerdata"):
+			// Simpan URL tiket pertama kali ditemukan agar bisa kembali jika redirect ke homepage
+			if e.TicketUrl == "" {
+				e.TicketUrl = currentUrl
+				utils.OriPrint("URL tiket tersimpan: " + e.TicketUrl)
+			}
 			e.submitBooking()
 		case strings.Contains(currentUrl, "/passengercontrol"):
 			e.confirmBooking()
 		case strings.Contains(currentUrl, "/paytype"):
 			e.selectPayment()
 		case strings.Contains(currentUrl, "/payment"):
+			// URL sudah benar di halaman payment, baru ambil HTML
+			e.grabPayment()
 			gotIt = true
 		case currentUrl == "https://booking.kai.id/" || currentUrl == "https://booking.kai.id":
-			browser.Page.Navigate("https://booking.kai.id")
+			// Redirect ke homepage — kembali ke URL tiket jika sudah tersimpan
+			if e.TicketUrl != "" {
+				utils.DangerPrint("Terredirect ke homepage, kembali ke URL tiket...")
+				browser.Page.Navigate(e.TicketUrl)
+			} else {
+				utils.DangerPrint("Terredirect ke homepage, URL tiket belum tersimpan!")
+			}
+		default:
+			utils.DangerPrint("URL tidak dikenal: " + currentUrl)
 		}
 	}
 }
@@ -201,19 +217,31 @@ func (e *EventHandler) confirmBooking() {
 }
 
 func (e *EventHandler) selectPayment() {
-	_, err := e.Browser.Page.Eval(`() => document.querySelector("#payForm5").submit()`)
+	// Cari form payment apapun yang tersedia, tidak hardcode #payForm5
+	_, err := e.Browser.Page.Eval(`() => {
+		const form = document.querySelector('[id^="payForm"]');
+		if (!form) throw new Error('form pembayaran tidak ditemukan');
+		form.submit();
+	}`)
 	if err != nil {
 		utils.DangerPrint("gagal pilih pembayaran: " + err.Error())
 		e.Browser.Page.Reload()
 		return
 	}
+	// Biarkan main loop yang deteksi URL /payment dan ambil HTML di sana
+}
 
-	time.Sleep(3 * time.Second)
-	e.Browser.Page.WaitLoad()
-	time.Sleep(3 * time.Second)
+func (e *EventHandler) grabPayment() {
 	html, err := e.Browser.Page.HTML()
 	if err != nil {
 		utils.DangerPrint("Gagal mendapatkan html pembayaran: " + err.Error())
+		return
+	}
+
+	// Validasi HTML tidak kosong / blank (halaman belum render)
+	if len(strings.TrimSpace(html)) < 500 {
+		utils.DangerPrint("HTML pembayaran terdeteksi tidak lengkap, skip notifikasi")
+		return
 	}
 
 	go utils.SendNotificationFile(html, "Dapet tiket nih, dengan penumpang: "+e.Psgs[0].PassengerId, *gvars.TeleID)
